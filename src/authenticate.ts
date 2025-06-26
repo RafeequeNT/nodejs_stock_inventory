@@ -7,6 +7,7 @@ import {
 import { Strategy as LocalStrategy } from "passport-local";
 import jwt from "jsonwebtoken";
 import { Request, Response, NextFunction, RequestHandler } from "express";
+import IUser from "./models/user.model";
 
 // Dummy user
 const DUMMY_USER = {
@@ -60,7 +61,7 @@ export const verifyAdmin = (
   res: Response,
   next: NextFunction
 ): void => {
-  if ((req.user as any)?.admin) {
+  if ((req.user as IUser)?.admin) {
     next();
   } else {
     res.status(403).json({ message: "Admins only!" });
