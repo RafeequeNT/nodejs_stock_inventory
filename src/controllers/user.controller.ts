@@ -115,6 +115,32 @@ export const refreshAccessToken = async (
   }
 };
 
+export const getCurrentUser = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  const user = req.user as any;
+
+  try {
+    const [rows] = await pool.query<RowDataPacket[]>(
+      "SELECT id, username, firstname, lastname, admin FROM users WHERE id = ?",
+      [user.id]
+    );
+
+    const userData = Array.isArray(rows) && rows.length > 0 ? rows[0] : null;
+
+    if (!userData) {
+      res.status(404).json({ message: "User not found" });
+      return;
+    }
+
+    res.status(200).json({ success: true, user: userData });
+  } catch (err) {
+    console.error("Error fetching user:", err);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
 export const listUsers = async (req: Request, res: Response): Promise<void> => {
   try {
     const page = parseInt(req.query.page as string) || 1;

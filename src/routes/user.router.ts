@@ -18,5 +18,11 @@ router.get(
   corsWithOptions,
   userController.listUsers
 );
+router.get(
+  "/me",
+  authenticate.verifyUser,
+  corsWithOptions,
+  userController.getCurrentUser
+);
 
 export default router;
