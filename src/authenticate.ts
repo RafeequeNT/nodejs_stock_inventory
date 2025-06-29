@@ -4,32 +4,16 @@ import {
   ExtractJwt,
   StrategyOptions,
 } from "passport-jwt";
-import { Strategy as LocalStrategy } from "passport-local";
 import jwt from "jsonwebtoken";
 import { Request, Response, NextFunction, RequestHandler } from "express";
 import IUser from "./models/user.model";
-
-// Dummy user
-const DUMMY_USER = {
-  id: "1",
-  username: "john",
-  password: "password",
-  admin: true,
-};
+// import dotenv from "dotenv";
+import pool from "./config/db";
 
 // Secret key
-const secretKey = "mysecretkey";
+const secretKey = process.env.ACCESS_SECRET || "defaultsecret";
 
-// Local Strategy
-passport.use(
-  new LocalStrategy((username, password, done) => {
-    if (username === DUMMY_USER.username && password === DUMMY_USER.password) {
-      return done(null, DUMMY_USER);
-    } else {
-      return done(null, false, { message: "Invalid credentials" });
-    }
-  })
-);
+const refreshSecret = process.env.REFRESH_SECRET || "refreshsecret";
 
 // JWT Strategy
 const jwtOptions: StrategyOptions = {
@@ -37,12 +21,20 @@ const jwtOptions: StrategyOptions = {
   secretOrKey: secretKey,
 };
 
+// 👇 JWT Strategy using MySQL
 passport.use(
-  new JwtStrategy(jwtOptions, (jwtPayload, done) => {
-    if (jwtPayload.username === DUMMY_USER.username) {
-      return done(null, DUMMY_USER);
-    } else {
-      return done(null, false);
+  new JwtStrategy(jwtOptions, async (jwtPayload, done) => {
+    try {
+      const [rows] = await pool.query(
+        "SELECT id, username,admin FROM users WHERE id = ?",
+        [jwtPayload.id]
+      );
+      const user = Array.isArray(rows) && rows.length > 0 ? rows[0] : null;
+
+      if (user) return done(null, user);
+      else return done(null, false);
+    } catch (err) {
+      return done(err, false);
     }
   })
 );
@@ -50,6 +42,10 @@ passport.use(
 // Create Token
 export const getToken = (user: { id: string; username: string }) =>
   jwt.sign(user, secretKey, { expiresIn: "1h" });
+
+// Generate refresh token
+export const getRefreshToken = (user: { id: string; username: string }) =>
+  jwt.sign(user, refreshSecret, { expiresIn: "7d" });
 
 // Middlewares
 export const verifyUser: RequestHandler = passport.authenticate("jwt", {
