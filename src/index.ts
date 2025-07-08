@@ -1,6 +1,11 @@
 import express from "express";
 import dotenv from "dotenv";
 import userRoutes from "./routes/user.router";
+import productRoutes from "./routes/product.router";
+import purchasetRoutes from "./routes/purchase.router";
+import salesRouter from "./routes/sales.router";
+import priceRouter from "./routes/price.router";
+
 import indexRouter from "./routes/index";
 import passport from "passport";
 import pool from "./config/db";
@@ -15,6 +20,10 @@ app.use(express.json());
 app.use("/", indexRouter);
 
 app.use("/users", userRoutes);
+app.use("/products", productRoutes);
+app.use("/purchases", purchasetRoutes);
+app.use("/sales", salesRouter);
+app.use("/prices", priceRouter);
 
 // Test MySQL connection before starting server
 pool
