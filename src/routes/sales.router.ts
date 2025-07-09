@@ -15,6 +15,13 @@ router.post(
   salesController.createSale
 );
 
+router.get(
+  "/credits",
+  corsWithOptions,
+  authenticate.verifyUser,
+  salesController.getCreditSalesWithBalance
+);
+
 // List all sales
 router.get(
   "/",

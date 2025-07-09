@@ -5,6 +5,7 @@ import productRoutes from "./routes/product.router";
 import purchasetRoutes from "./routes/purchase.router";
 import salesRouter from "./routes/sales.router";
 import priceRouter from "./routes/price.router";
+import paymentRouter from "./routes/payment.router";
 
 import indexRouter from "./routes/index";
 import passport from "passport";
@@ -24,6 +25,7 @@ app.use("/products", productRoutes);
 app.use("/purchases", purchasetRoutes);
 app.use("/sales", salesRouter);
 app.use("/prices", priceRouter);
+app.use("/payments", paymentRouter);
 
 // Test MySQL connection before starting server
 pool
