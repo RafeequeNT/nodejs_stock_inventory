@@ -10,9 +10,14 @@ import paymentRouter from "./routes/payment.router";
 import indexRouter from "./routes/index";
 import passport from "passport";
 import pool from "./config/db";
+import corsWithOptions from "./routes/cors";
 
 dotenv.config();
 const app = express();
+
+app.use(corsWithOptions);
+// app.options("/*", corsWithOptions);
+
 app.use(passport.initialize());
 
 const PORT = process.env.PORT || 3000;

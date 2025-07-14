@@ -296,31 +296,43 @@ export const getCreditSalesWithBalance = async (
   const offset = (page - 1) * limit;
 
   try {
-    // Get total count of credit/partial sales
-    const [countResult] = await pool.query(
-      `SELECT COUNT(DISTINCT s.id) AS total
-       FROM sales s
-       WHERE s.payment_status IN ('credit', 'partial')`
+    // Use subquery to count only remaining_balance > 0
+    const [countRows] = await pool.query(
+      `
+      SELECT COUNT(*) AS total FROM (
+        SELECT 
+          s.id,
+          (s.total_amount - IFNULL(SUM(sp.amount), 0)) AS remaining_balance
+        FROM sales s
+        LEFT JOIN sale_payments sp ON s.id = sp.sale_id
+        WHERE s.payment_status IN ('credit', 'partial')
+        GROUP BY s.id
+        HAVING remaining_balance > 0
+      ) AS remaining_sales
+      `
     );
-    const total = (countResult as any)[0].total;
+    const total = (countRows as any)[0].total;
 
-    // Main query with pagination
+    // Main data query (with pagination)
     const [rows] = await pool.query(
       `
-      SELECT 
-        s.id AS sale_id,
-        s.customer_name,
-        s.customer_phone,
-        s.total_amount,
-        s.payment_status,
-        s.created_at,
-        IFNULL(SUM(sp.amount), 0) AS total_paid,
-        (s.total_amount - IFNULL(SUM(sp.amount), 0)) AS remaining_balance
-      FROM sales s
-      LEFT JOIN sale_payments sp ON s.id = sp.sale_id
-      WHERE s.payment_status IN ('credit', 'partial')
-      GROUP BY s.id
-      ORDER BY s.created_at DESC
+      SELECT *
+      FROM (
+        SELECT 
+          s.id AS sale_id,
+          s.customer_name,
+          s.customer_phone,
+          s.total_amount,
+          s.payment_status,
+          s.created_at,
+          IFNULL(SUM(sp.amount), 0) AS total_paid,
+          (s.total_amount - IFNULL(SUM(sp.amount), 0)) AS remaining_balance
+        FROM sales s
+        LEFT JOIN sale_payments sp ON s.id = sp.sale_id
+        GROUP BY s.id
+        HAVING remaining_balance > 0
+      ) AS credit_sales
+      ORDER BY created_at DESC
       LIMIT ? OFFSET ?
       `,
       [limit, offset]

@@ -1,7 +1,11 @@
 import cors, { CorsOptionsDelegate } from "cors";
 import { Request } from "express";
 
-const whitelist = ["http://localhost:3000", "https://localhost:3443"];
+const whitelist = [
+  "http://localhost:3000",
+  "https://localhost:3443",
+  "http://localhost:5173",
+];
 
 const corsOptionsDelegate: CorsOptionsDelegate<Request> = (req, callback) => {
   const origin = req.header("Origin");
